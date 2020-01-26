@@ -45,14 +45,14 @@ Quaternion & Quaternion::normalize() {
 
 // this method returns a euler rotation
 void Quaternion::to_euler_rotation(float *x, float *y, float *z) {
-    double sqw = _w*_w;
-    double sqx = _x*_x;
-    double sqy = _y*_y;
-    double sqz = _z*_z;
+    double sqw = a * a;
+    double sqx = b * b;
+    double sqy = c * c;
+    double sqz = d * d;
 
-    x = atan2(2.0*(_x*_y+_z*_w),(sqx-sqy-sqz+sqw));
-    y = asin(-2.0*(_x*_z-_y*_w)/(sqx+sqy+sqz+sqw));
-    z = atan2(2.0*(_y*_z+_x*_w),(-sqx-sqy+sqz+sqw));
+    x = atan2(2.0*(b*c+d*a),(sqx-sqy-sqz+sqw));
+    y = asin(-2.0*(b*d-c*a)/(sqx+sqy+sqz+sqw));
+    z = atan2(2.0*(c*d+b*a),(-sqx-sqy+sqz+sqw));
 }
 
 // This method takes an euler rotation in rad and converts it to an equivilent
