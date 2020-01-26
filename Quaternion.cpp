@@ -44,7 +44,7 @@ Quaternion & Quaternion::normalize() {
 }
 
 // this method returns a euler rotation
-void Quaternion::to_euler_rotation(float &x, float &y, float &z) {
+void Quaternion::to_euler_rotation(float *x, float *y, float *z) {
     double sqw = _w*_w;
     double sqx = _x*_x;
     double sqy = _y*_y;
@@ -109,7 +109,7 @@ const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const
     // http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/
     // We want to compute the below values.
     // w = 1 + v1•v2
-    // x = (v1 x v2).x 
+    // x = (v1 x v2).x
     // y = (v1 x v2).y
     // z = (v1 x v2).z
 
@@ -140,9 +140,9 @@ const Quaternion Quaternion::rotate(const Quaternion& q) const {
     return (*this) * q * conj();
 }
 
-// This modifies this normalized rotation quaternion and makes it 
+// This modifies this normalized rotation quaternion and makes it
 // rotate between 0-1 as much as it would normally rotate.
-// The math here is pretty sloppy but should work for 
+// The math here is pretty sloppy but should work for
 // most cases.
 Quaternion & Quaternion::fractional(float f) {
     a = 1-f + f*a;
@@ -151,4 +151,3 @@ Quaternion & Quaternion::fractional(float f) {
     d *= f;
     return normalize();
 }
-
