@@ -44,7 +44,7 @@ Quaternion & Quaternion::normalize() {
 }
 
 // this method returns a euler rotation
-void Quaternion::to_euler_rotation(float *x, float *y, float *z) {
+void Quaternion::to_euler_rotation(double *x, double *y, double *z) {
     double sqw = a * a;
     double sqx = b * b;
     double sqy = c * c;
