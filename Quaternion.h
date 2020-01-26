@@ -44,6 +44,7 @@ public:
     // This computes the rotation that will tranform this to q.
     const Quaternion rotation_between_vectors(const Quaternion& v) const;
     float dot_product(const Quaternion& q) const;
+    void to_euler_rotation(float &x, float &y, float &z);
 
     // This method takes one vector and rotates it using this Quaternion.
     // The input must be a pure vector (a == 0)
