@@ -50,9 +50,9 @@ void Quaternion::to_euler_rotation(double *x, double *y, double *z) {
     double sqy = c * c;
     double sqz = d * d;
 
-    x = atan2(2.0*(b*c+d*a),(sqx-sqy-sqz+sqw));
-    y = asin(-2.0*(b*d-c*a)/(sqx+sqy+sqz+sqw));
-    z = atan2(2.0*(c*d+b*a),(-sqx-sqy+sqz+sqw));
+    *x = atan2(2.0*(b*c+d*a),(sqx-sqy-sqz+sqw));
+    *y = asin(-2.0*(b*d-c*a)/(sqx+sqy+sqz+sqw));
+    *z = atan2(2.0*(c*d+b*a),(-sqx-sqy+sqz+sqw));
 }
 
 // This method takes an euler rotation in rad and converts it to an equivilent
