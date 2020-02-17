@@ -44,34 +44,44 @@ Quaternion & Quaternion::normalize() {
 }
 
 // this method returns a euler rotation
-void Quaternion::to_euler_rotation(double *x, double *y, double *z) {
-    double sqw = a * a;
-    double sqx = b * b;
-    double sqy = c * c;
-    double sqz = d * d;
+void Quaternion::to_euler_rotation(double *roll, double *pitch, double *yaw) {
+  // roll (x-axis rotation)
+ double sinr_cosp = 2 * (a * b + c * d);
+ double cosr_cosp = 1 - 2 * (b * b + c * c);
+ *roll = std::atan2(sinr_cosp, cosr_cosp);
 
-    *x = atan2(2.0*(b*c+d*a),(sqx-sqy-sqz+sqw));
-    *y = asin(-2.0*(b*d-c*a)/(sqx+sqy+sqz+sqw));
-    *z = atan2(2.0*(c*d+b*a),(-sqx-sqy+sqz+sqw));
+ // pitch (y-axis rotation)
+ double sinp = 2 * (a * c - d * b);
+ if (std::abs(sinp) >= 1)
+     *pitch = std::copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+ else
+     *pitch = std::asin(sinp);
+
+ // yaw (z-axis rotation)
+ double siny_cosp = 2 * (a * d + b * c);
+ double cosy_cosp = 1 - 2 * (c * c + d * d);
+ *yaw = std::atan2(siny_cosp, cosy_cosp);
 }
 
 // This method takes an euler rotation in rad and converts it to an equivilent
 // Quaternion rotation.
 // 800B
-const Quaternion Quaternion::from_euler_rotation(float x, float y, float z) {
-    float c1 = cos(y/2);
-    float c2 = cos(z/2);
-    float c3 = cos(x/2);
+const Quaternion Quaternion::from_euler_rotation(float roll, float pitch, float yaw) {
+  // Abbreviations for the various angular functions
+  double cy = cos(yaw * 0.5);
+  double sy = sin(yaw * 0.5);
+  double cp = cos(pitch * 0.5);
+  double sp = sin(pitch * 0.5);
+  double cr = cos(roll * 0.5);
+  double sr = sin(roll * 0.5);
 
-    float s1 = sin(y/2);
-    float s2 = sin(z/2);
-    float s3 = sin(x/2);
-    Quaternion ret;
-    ret.a = c1 * c2 * c3 - s1 * s2 * s3;
-    ret.b = s1 * s2 * c3 + c1 * c2 * s3;
-    ret.c = s1 * c2 * c3 + c1 * s2 * s3;
-    ret.d = c1 * s2 * c3 - s1 * c2 * s3;
-    return ret;
+  Quaternion q;
+  q.a = cy * cp * cr + sy * sp * sr;
+  q.b = cy * cp * sr - sy * sp * cr;
+  q.c = sy * cp * sr + cy * sp * cr;
+  q.d = sy * cp * cr - cy * sp * sr;
+
+  return q;
 }
 
 const Quaternion Quaternion::from_euler_rotation_approx(float x, float y, float z) {
