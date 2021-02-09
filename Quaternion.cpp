@@ -56,7 +56,7 @@ const Quaternion Quaternion::from_euler_rotation(float x, float y, float z) {
     float s3 = sin(x/2);
     Quaternion ret;
     ret.a = c1 * c2 * c3 + s1 * s2 * s3;
-    ret.b = s1 * s2 * c3 - c1 * c2 * s3;
+    ret.b = c1 * c2 * s3 - s1 * s2 * c3;
     ret.c = s1 * c2 * c3 + c1 * s2 * s3;
     ret.d = c1 * s2 * c3 - s1 * c2 * s3;
     return ret;
@@ -74,7 +74,7 @@ const Quaternion Quaternion::from_euler_rotation_approx(float x, float y, float 
     float s3 = x/2;
     Quaternion ret;
     ret.a = c1 * c2 * c3 + s1 * s2 * s3;
-    ret.b = s1 * s2 * c3 - c1 * c2 * s3;
+    ret.b = c1 * c2 * s3 - s1 * s2 * c3;
     ret.c = s1 * c2 * c3 + c1 * s2 * s3;
     ret.d = c1 * s2 * c3 - s1 * c2 * s3;
     return ret;
