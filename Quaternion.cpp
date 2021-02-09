@@ -1,5 +1,10 @@
 #include "Quaternion.h"
+
+#ifdef ARDUINO
 #include "Arduino.h"
+#else
+#include <math.h>
+#endif
 
 // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/arithmetic/index.htm
 // 800B
