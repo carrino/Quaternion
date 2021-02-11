@@ -5,6 +5,5 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_library(Quaternion SHARED Quaternion.cpp Quaternion.h)
 
-enable_testing()
 add_subdirectory(test)
 
