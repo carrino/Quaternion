@@ -52,13 +52,13 @@ Quaternion & Quaternion::normalize() {
 // Quaternion rotation.
 // 800B
 const Quaternion Quaternion::from_euler_rotation(float x, float y, float z) {
-    float c1 = cos(y/2);
-    float c2 = cos(z/2);
-    float c3 = cos(x/2);
+    float c1 = cos(y/2.0f);
+    float c2 = cos(z/2.0f);
+    float c3 = cos(x/2.0f);
 
-    float s1 = sin(y/2);
-    float s2 = sin(z/2);
-    float s3 = sin(x/2);
+    float s1 = sin(y/2.0f);
+    float s2 = sin(z/2.0f);
+    float s3 = sin(x/2.0f);
     Quaternion ret;
     ret.a = c1 * c2 * c3 + s1 * s2 * s3;
     ret.b = c1 * c2 * s3 - s1 * s2 * c3;
@@ -69,14 +69,14 @@ const Quaternion Quaternion::from_euler_rotation(float x, float y, float z) {
 
 const Quaternion Quaternion::from_euler_rotation_approx(float x, float y, float z) {
     // approximage cos(theta) as 1 - theta^2 / 2
-    float c1 = 1 - (y * y / 8);
-    float c2 = 1 - (z * z / 8);
-    float c3 = 1 - (x * x / 8);
+    float c1 = 1.0f - (y * y / 8.0f);
+    float c2 = 1.0f - (z * z / 8.0f);
+    float c3 = 1.0f - (x * x / 8.0f);
 
     // appromixate sin(theta) as theta
-    float s1 = y/2;
-    float s2 = z/2;
-    float s3 = x/2;
+    float s1 = y/2.0f;
+    float s2 = z/2.0f;
+    float s3 = x/2.0f;
     Quaternion ret;
     ret.a = c1 * c2 * c3 + s1 * s2 * s3;
     ret.b = c1 * c2 * s3 - s1 * s2 * c3;
@@ -87,9 +87,9 @@ const Quaternion Quaternion::from_euler_rotation_approx(float x, float y, float 
 
 const Quaternion Quaternion::conj() const {
     Quaternion ret(*this);
-    ret.b *= -1;
-    ret.c *= -1;
-    ret.d *= -1;
+    ret.b *= -1.0f;
+    ret.c *= -1.0f;
+    ret.d *= -1.0f;
     return ret;
 }
 
@@ -119,7 +119,7 @@ const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const
     // From wikipedia https://en.wikipedia.org/wiki/Quaternion#Quaternions_and_the_geometry_of_R3
     // The cross product p x q is just the vector part of multiplying p * q
     Quaternion ret = (*this) * q;
-    ret.a = 1 - ret.a;
+    ret.a = 1.0f - ret.a;
     ret.normalize();
     return ret;
 }
@@ -138,7 +138,7 @@ const Quaternion Quaternion::rotate(const Quaternion& q) const {
 // The math here is pretty sloppy but should work for 
 // most cases.
 Quaternion & Quaternion::fractional(float f) {
-    a = 1-f + f*a;
+    a = 1.0f-f + f*a;
     b *= f;
     c *= f;
     d *= f;
