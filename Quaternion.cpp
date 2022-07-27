@@ -35,7 +35,7 @@ Quaternion & Quaternion::operator*=(float scale) {
 
 float Quaternion::norm() const {
     float norm2 = a*a + b*b + c*c + d*d;
-    return sqrt(norm2);
+    return sqrtf(norm2);
 }
 
 // 400B
@@ -52,13 +52,13 @@ Quaternion & Quaternion::normalize() {
 // Quaternion rotation.
 // 800B
 const Quaternion Quaternion::from_euler_rotation(float x, float y, float z) {
-    float c1 = cos(y/2.0f);
-    float c2 = cos(z/2.0f);
-    float c3 = cos(x/2.0f);
+    float c1 = cosf(y/2.0f);
+    float c2 = cosf(z/2.0f);
+    float c3 = cosf(x/2.0f);
 
-    float s1 = sin(y/2.0f);
-    float s2 = sin(z/2.0f);
-    float s3 = sin(x/2.0f);
+    float s1 = sinf(y/2.0f);
+    float s2 = sinf(z/2.0f);
+    float s3 = sinf(x/2.0f);
     Quaternion ret;
     ret.a = c1 * c2 * c3 + s1 * s2 * s3;
     ret.b = c1 * c2 * s3 - s1 * s2 * c3;
