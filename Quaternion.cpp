@@ -117,7 +117,9 @@ const Quaternion Quaternion::rotation_between_vectors(const Quaternion& q) const
     //return ret;
 
     // From wikipedia https://en.wikipedia.org/wiki/Quaternion#Quaternions_and_the_geometry_of_R3
+    // https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
     // The cross product p x q is just the vector part of multiplying p * q
+    // the scalar part after a multiply is -p•q 
     Quaternion ret = (*this) * q;
     ret.a = 1.0f - ret.a;
     ret.normalize();
