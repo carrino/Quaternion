@@ -48,6 +48,20 @@ Quaternion & Quaternion::normalize() {
     return *this;
 }
 
+const Quaternion Quaternion::from_axis_angle(float x, float y, float z) {
+    float angle = sqrtf(x*x + y*y + z*z);
+    float s = sinf(angle / 2.0f);
+    float w = cosf(angle / 2.0f);
+    return new Quaternion(w, x / angle * s, y / angle * s, z / angle * s);
+}
+
+const Quaternion Quaternion::from_axis_angle_approx(float x, float y, float z) {
+    float angle = sqrtf(x*x + y*y + z*z);
+    float s = angle / 2.0f;
+    float w = 1.0f - (angle * angle / 8.0f);
+    return new Quaternion(w, x / angle * s, y / angle * s, z / angle * s);
+}
+
 // This method takes an euler rotation in rad and converts it to an equivilent 
 // Quaternion rotation.
 // 800B
