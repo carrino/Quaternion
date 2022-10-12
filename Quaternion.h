@@ -21,6 +21,7 @@ public:
     static const Quaternion from_euler_rotation_approx(float x, float y, float z);
 
     static const Quaternion from_axis_angle(float x, float y, float z);
+    static const Quaternion from_axis_angle_approx(float x, float y, float z);
 
     Quaternion & operator=(const Quaternion &rhs) {
         a = rhs.a;
