@@ -57,9 +57,8 @@ const Quaternion Quaternion::from_axis_angle(float x, float y, float z) {
 
 const Quaternion Quaternion::from_axis_angle_approx(float x, float y, float z) {
     float angle = sqrtf(x*x + y*y + z*z);
-    float s = angle / 2.0f;
     float w = 1.0f - (angle * angle / 8.0f);
-    return new Quaternion(w, x / angle * s, y / angle * s, z / angle * s);
+    return new Quaternion(w, x / 2.0f, y / 2.0f, z / 2.0f);
 }
 
 // This method takes an euler rotation in rad and converts it to an equivilent 
