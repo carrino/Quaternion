@@ -54,9 +54,9 @@ const Quaternion Quaternion::from_axis_angle(float x, float y, float z) {
     float w = cosf(angle / 2.0f);
     Quaternion ret;
     ret.a = w;
-    ret.b = x / angle * s,
-    ret.c = y / angle * s,
-    ret.d = z / angle * s,
+    ret.b = x / angle * s;
+    ret.c = y / angle * s;
+    ret.d = z / angle * s;
     return ret;
 }
 
