@@ -6,6 +6,13 @@
 #include <math.h>
 #endif
 
+Quaternion::Quaternion(float w_val, float x_val, float y_val, float z_val) {
+    a = w_val;
+    b = x_val;
+    c = y_val;
+    d = z_val;
+}
+
 // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/arithmetic/index.htm
 // 800B
 Quaternion & Quaternion::operator*=(const Quaternion &q) {

@@ -13,6 +13,9 @@ public:
     // This is a vector that can be rotated in Quaternion space.
     Quaternion(float x, float y, float z) {a = 0; b = x; c = y; d = z;}
 
+    // Full constructor for all components
+    Quaternion(float w_val, float x_val, float y_val, float z_val);
+
     // This returns a Quaternion that rotates in each given axis in radians.
     // We use standard right hand rule for rotations and coordinates.
     static const Quaternion from_euler_rotation(float x, float y, float z);

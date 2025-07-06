@@ -1,0 +1,30 @@
+name: CMake Build and Test
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop, main, master ] # Also run on PRs to these branches
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Boost
+      run: sudo apt-get update && sudo apt-get install -y libboost-test-dev
+
+    - name: Clean and Create Build Directory
+      run: rm -rf ${{github.workspace}}/build && mkdir ${{github.workspace}}/build
+
+    - name: Configure CMake
+      run: cmake -S ${{github.workspace}} -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config Debug
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C Debug --verbose
