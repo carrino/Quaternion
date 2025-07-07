@@ -94,6 +94,7 @@ test/Boost_Tests_run: test/CMakeFiles/Boost_Tests_run.dir/test.cpp.o
 test/Boost_Tests_run: test/CMakeFiles/Boost_Tests_run.dir/build.make
 test/Boost_Tests_run: libQuaternion.so
 test/Boost_Tests_run: /usr/lib/x86_64-linux-gnu/libboost_unit_test_framework.so.1.83.0
+test/Boost_Tests_run: /usr/lib/x86_64-linux-gnu/libboost_serialization.so.1.83.0
 test/Boost_Tests_run: test/CMakeFiles/Boost_Tests_run.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/app/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable Boost_Tests_run"
 	cd /app/build/test && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Boost_Tests_run.dir/link.txt --verbose=$(VERBOSE)

@@ -2,12 +2,14 @@
 #define BOOST_TEST_MODULE QuaternionTest
 #define BOOST_TEST_NO_OLD_TOOLS
 #include <boost/test/unit_test.hpp>
+#include <boost/math/quaternion.hpp> // For Boost Quaternion
 #include <Quaternion.h>
 #include <iostream>
 #include <cmath> // For std::sqrt, std::cos, std::sin, M_PI_2 etc.
 
 // Define a tolerance for floating point comparisons
 const float TOLERANCE = 0.0001f; // Default tolerance: 0.01%
+const float BOOST_CMP_TOLERANCE = 0.001f; // Slightly higher tolerance for cross-library comparison due to potential minor algorithmic differences
 
 // General check for equality using the default TOLERANCE
 void checkEquals(const Quaternion &q1, const Quaternion &q2) {
@@ -688,5 +690,146 @@ BOOST_AUTO_TEST_CASE(Distributivity) {
     Quaternion res2_rhs = (q1 * q3) + (q2 * q3);
     checkEquals(res2_lhs, res2_rhs);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// Helper to compare our Quaternion with boost::math::quaternion<float>
+void checkBoostEquals(const Quaternion& our_q, const boost::math::quaternion<float>& boost_q, float tolerance = BOOST_CMP_TOLERANCE) {
+    BOOST_CHECK_CLOSE(our_q.a, boost_q.R_component_1(), tolerance);
+    BOOST_CHECK_CLOSE(our_q.b, boost_q.R_component_2(), tolerance);
+    BOOST_CHECK_CLOSE(our_q.c, boost_q.R_component_3(), tolerance);
+    BOOST_CHECK_CLOSE(our_q.d, boost_q.R_component_4(), tolerance);
+}
+
+// Convert our Quaternion to boost::math::quaternion<float>
+boost::math::quaternion<float> toBoostQuaternion(const Quaternion& q) {
+    return boost::math::quaternion<float>(q.a, q.b, q.c, q.d);
+}
+
+// Convert boost::math::quaternion<float> to our Quaternion
+Quaternion fromBoostQuaternion(const boost::math::quaternion<float>& bq) {
+    return Quaternion(bq.R_component_1(), bq.R_component_2(), bq.R_component_3(), bq.R_component_4());
+}
+
+
+BOOST_AUTO_TEST_SUITE(BoostQuaternionComparisonTests)
+
+BOOST_AUTO_TEST_CASE(BoostMultiplication) {
+    Quaternion q1_our(std::sqrt(0.5f), std::sqrt(0.5f), 0.0f, 0.0f); // 90 deg X
+    Quaternion q2_our(std::sqrt(0.5f), 0.0f, std::sqrt(0.5f), 0.0f); // 90 deg Y
+
+    boost::math::quaternion<float> q1_boost = toBoostQuaternion(q1_our);
+    boost::math::quaternion<float> q2_boost = toBoostQuaternion(q2_our);
+
+    Quaternion result_our = q1_our * q2_our;
+    boost::math::quaternion<float> result_boost = q1_boost * q2_boost;
+    checkBoostEquals(result_our, result_boost);
+
+    // Test with more complex numbers
+    Quaternion q3_our(0.1f, 0.2f, 0.3f, 0.4f);
+    q3_our.normalize();
+    Quaternion q4_our(0.5f, -0.1f, -0.2f, 0.3f);
+    q4_our.normalize();
+
+    boost::math::quaternion<float> q3_boost = toBoostQuaternion(q3_our);
+    boost::math::quaternion<float> q4_boost = toBoostQuaternion(q4_our);
+    checkBoostEquals(q3_our * q4_our, q3_boost * q4_boost);
+}
+
+BOOST_AUTO_TEST_CASE(BoostFromAxisAngle) {
+    // Test 90 deg rotation around X axis
+    float angle_x = M_PI_2;
+    float axis_x_x = 1.0f, axis_x_y = 0.0f, axis_x_z = 0.0f;
+    Quaternion qx_our = Quaternion::from_axis_angle(axis_x_x * angle_x, axis_x_y * angle_x, axis_x_z * angle_x); // Our from_axis_angle takes angle components
+
+    float c_half_x = std::cos(angle_x / 2.0f);
+    float s_half_x = std::sin(angle_x / 2.0f);
+    boost::math::quaternion<float> qx_boost(c_half_x, s_half_x * axis_x_x, s_half_x * axis_x_y, s_half_x * axis_x_z);
+    checkBoostEquals(qx_our, qx_boost);
+
+
+    // Test 45 deg rotation around Y axis
+    float angle_y = M_PI_4;
+    float axis_y_x = 0.0f, axis_y_y = 1.0f, axis_y_z = 0.0f;
+    Quaternion qy_our = Quaternion::from_axis_angle(axis_y_x * angle_y, axis_y_y * angle_y, axis_y_z * angle_y);
+
+    float c_half_y = std::cos(angle_y / 2.0f);
+    float s_half_y = std::sin(angle_y / 2.0f);
+    boost::math::quaternion<float> qy_boost(c_half_y, s_half_y * axis_y_x, s_half_y * axis_y_y, s_half_y * axis_y_z);
+    checkBoostEquals(qy_our, qy_boost);
+
+    // Test 60 deg rotation around Z axis
+    float angle_z = M_PI / 3.0f;
+    float axis_z_x = 0.0f, axis_z_y = 0.0f, axis_z_z = 1.0f;
+    Quaternion qz_our = Quaternion::from_axis_angle(axis_z_x * angle_z, axis_z_y * angle_z, axis_z_z * angle_z);
+
+    float c_half_z = std::cos(angle_z / 2.0f);
+    float s_half_z = std::sin(angle_z / 2.0f);
+    boost::math::quaternion<float> qz_boost(c_half_z, s_half_z * axis_z_x, s_half_z * axis_z_y, s_half_z * axis_z_z);
+    checkBoostEquals(qz_our, qz_boost);
+
+
+    // Test 30 deg rotation around axis (1,1,1)
+    float angle_xyz = M_PI / 6.0f;
+    float axis_xyz_x = 1.0f/std::sqrt(3.0f), axis_xyz_y = 1.0f/std::sqrt(3.0f), axis_xyz_z = 1.0f/std::sqrt(3.0f);
+    // Our from_axis_angle takes angle components: rx, ry, rz where total angle = sqrt(rx^2+ry^2+rz^2)
+    // and axis is (rx,ry,rz)/total_angle.
+    // So, to get angle_xyz around (axis_xyz_x, ...), we pass (angle_xyz * axis_xyz_x, ...)
+    Quaternion qxyz_our = Quaternion::from_axis_angle(angle_xyz * axis_xyz_x, angle_xyz * axis_xyz_y, angle_xyz * axis_xyz_z);
+
+    float c_half_xyz = std::cos(angle_xyz / 2.0f);
+    float s_half_xyz = std::sin(angle_xyz / 2.0f);
+    boost::math::quaternion<float> qxyz_boost(c_half_xyz, s_half_xyz * axis_xyz_x, s_half_xyz * axis_xyz_y, s_half_xyz * axis_xyz_z);
+    checkBoostEquals(qxyz_our, qxyz_boost);
+
+    // Test with zero angle (should be identity)
+    Quaternion q_zero_our = Quaternion::from_axis_angle(0.0f, 0.0f, 0.0f); // Should be identity (1,0,0,0)
+    boost::math::quaternion<float> q_zero_boost(1.0f, 0.0f, 0.0f, 0.0f);
+    checkBoostEquals(q_zero_our, q_zero_boost);
+}
+
+
+BOOST_AUTO_TEST_CASE(BoostRotate) {
+    // Rotation quaternion: 90 deg around X axis
+    Quaternion rot_q_our = Quaternion::from_euler_rotation(M_PI_2, 0, 0);
+    boost::math::quaternion<float> rot_q_boost = toBoostQuaternion(rot_q_our);
+    boost::math::quaternion<float> rot_q_boost_conj = conj(rot_q_boost);
+
+    // Vector to rotate: (0,1,0) (Y-axis)
+    Quaternion vec_our(0.0f, 0.0f, 1.0f, 0.0f); // Our vector constructor is (0, x, y, z)
+    boost::math::quaternion<float> vec_boost(0.0f, vec_our.b, vec_our.c, vec_our.d);
+
+    Quaternion rotated_vec_our = rot_q_our.rotate(vec_our);
+    boost::math::quaternion<float> rotated_vec_boost = rot_q_boost * vec_boost * rot_q_boost_conj;
+    checkBoostEquals(rotated_vec_our, rotated_vec_boost);
+
+
+    // Rotation quaternion: 45 deg around (1,1,1)
+    float angle_xyz = M_PI_4;
+    float axis_val = 1.0f/std::sqrt(3.0f);
+    Quaternion rot_q2_our = Quaternion::from_axis_angle(angle_xyz * axis_val, angle_xyz * axis_val, angle_xyz * axis_val);
+    boost::math::quaternion<float> rot_q2_boost = toBoostQuaternion(rot_q2_our);
+    boost::math::quaternion<float> rot_q2_boost_conj = conj(rot_q2_boost);
+
+    // Vector to rotate: (1,0,0) (X-axis)
+    Quaternion vec2_our(0.0f, 1.0f, 0.0f, 0.0f);
+    boost::math::quaternion<float> vec2_boost(0.0f, vec2_our.b, vec2_our.c, vec2_our.d);
+
+    Quaternion rotated_vec2_our = rot_q2_our.rotate(vec2_our);
+    boost::math::quaternion<float> rotated_vec2_boost = rot_q2_boost * vec2_boost * rot_q2_boost_conj;
+    checkBoostEquals(rotated_vec2_our, rotated_vec2_boost);
+
+    // Test rotation by identity
+    Quaternion id_rot_our; // (1,0,0,0)
+    boost::math::quaternion<float> id_rot_boost(1.0f,0.0f,0.0f,0.0f);
+    Quaternion vec3_our(0.0f, 0.5f, -0.3f, 1.2f);
+    boost::math::quaternion<float> vec3_boost(0.0f, vec3_our.b, vec3_our.c, vec3_our.d);
+
+    Quaternion rotated_by_id_our = id_rot_our.rotate(vec3_our);
+    boost::math::quaternion<float> rotated_by_id_boost = id_rot_boost * vec3_boost * conj(id_rot_boost);
+    checkBoostEquals(rotated_by_id_our, rotated_by_id_boost);
+    checkBoostEquals(rotated_by_id_our, toBoostQuaternion(vec3_our)); // Should be unchanged
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

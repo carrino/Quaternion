@@ -1,0 +1,22 @@
+Start testing: Jul 07 22:33 UTC
+----------------------------------------------------------
+1/1 Testing: QuaternionTests
+1/1 Test: QuaternionTests
+Command: "/app/build/test/Boost_Tests_run"
+Directory: /app/build/test
+"QuaternionTests" start time: Jul 07 22:33 UTC
+Output:
+----------------------------------------------------------
+Running 34 test cases...
+
+[1;32;49m*** No errors detected
+[0;39;49m
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"QuaternionTests" end time: Jul 07 22:33 UTC
+"QuaternionTests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Jul 07 22:33 UTC

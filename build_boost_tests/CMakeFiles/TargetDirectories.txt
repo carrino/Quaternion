@@ -1,0 +1,6 @@
+/app/build_boost_tests/CMakeFiles/Quaternion.dir
+/app/build_boost_tests/CMakeFiles/edit_cache.dir
+/app/build_boost_tests/CMakeFiles/rebuild_cache.dir
+/app/build_boost_tests/test/CMakeFiles/Boost_Tests_run.dir
+/app/build_boost_tests/test/CMakeFiles/edit_cache.dir
+/app/build_boost_tests/test/CMakeFiles/rebuild_cache.dir
