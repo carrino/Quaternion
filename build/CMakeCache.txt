@@ -20,8 +20,6 @@ Boost_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0
 //Path to a file.
 Boost_INCLUDE_DIR:PATH=/usr/include
 
-Boost_SERIALIZATION_LIBRARY_RELEASE:STRING=/usr/lib/x86_64-linux-gnu/libboost_serialization.so.1.83.0
-
 Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE:STRING=/usr/lib/x86_64-linux-gnu/libboost_unit_test_framework.so.1.83.0
 
 //Path to a program.
@@ -237,9 +235,6 @@ Quaternion_SOURCE_DIR:STATIC=/app
 //The directory containing a CMake configuration file for boost_headers.
 boost_headers_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_headers-1.83.0
 
-//The directory containing a CMake configuration file for boost_serialization.
-boost_serialization_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_serialization-1.83.0
-
 //The directory containing a CMake configuration file for boost_unit_test_framework.
 boost_unit_test_framework_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_unit_test_framework-1.83.0
 
@@ -396,12 +391,10 @@ CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding Boost
-FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[/usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake][cfound components: unit_test_framework serialization ][v1.83.0()]
+FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[/usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake][cfound components: unit_test_framework ][v1.83.0()]
 //linker supports push/pop state
 _CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
 //ADVANCED property for variable: boost_headers_DIR
 boost_headers_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: boost_serialization_DIR
-boost_serialization_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: boost_unit_test_framework_DIR
 boost_unit_test_framework_DIR-ADVANCED:INTERNAL=1

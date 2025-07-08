@@ -1,2 +1,3 @@
-QuaternionTests 1 0.0076169
+QuaternionTests 0 0
 ---
+QuaternionTests

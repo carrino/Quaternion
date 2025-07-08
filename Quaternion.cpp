@@ -57,18 +57,9 @@ Quaternion & Quaternion::normalize() {
 
 const Quaternion Quaternion::from_axis_angle(float x, float y, float z) {
     float angle = sqrtf(x*x + y*y + z*z);
-    Quaternion ret; // Defaults to (1,0,0,0)
-
-    // Check for zero angle to avoid division by zero -> NaN
-    // A very small epsilon can be used here if needed, but for angle == 0,
-    // the axis is undefined, so identity rotation is a reasonable result.
-    if (angle == 0.0f) {
-        // ret is already (1,0,0,0) from default constructor
-        return ret;
-    }
-
     float s = sinf(angle / 2.0f);
     float w = cosf(angle / 2.0f);
+    Quaternion ret;
     ret.a = w;
     ret.b = x / angle * s;
     ret.c = y / angle * s;
