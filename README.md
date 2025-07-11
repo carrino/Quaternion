@@ -2,12 +2,14 @@
 
 This document provides an example of how to use the Quaternion library for a common task in orientation sensing: integrating gyroscope data and correcting for drift using accelerometer data. The example is styled after typical Arduino `setup()` and `loop()` functions for clarity.
 
+**Convention Note:** In this example, `orientation_q` represents the rotation from the **body frame to the world frame**. So, `world_vector = orientation_q.rotate(body_vector)`.
+
 ## Prerequisites
 
 - This Quaternion library.
 - A sensor system providing:
-    - Gyroscope readings (`gx, gy, gz`) in radians per second.
-    - Accelerometer readings (`ax, ay, az`) - typically in m/s^2 or g's, but used here as a vector indicating the direction of "up" or "down".
+    - Gyroscope readings (`gx_rad_s, gy_rad_s, gz_rad_s`) in radians per second (body frame).
+    - Accelerometer readings (`ax_m_s2, ay_m_s2, az_m_s2`) in m/s^2 (body frame).
 
 ## Arduino-style Example
 
@@ -16,31 +18,26 @@ This example demonstrates a complementary filter approach.
 ```cpp
 // main.cpp (Example, assumes Quaternion.h is available)
 #include "Quaternion.h"
-#include <cmath>    // For std::sqrt, std::acos
+#include <cmath>    // For std::sqrt
 #include <iostream> // For printing
-#include <vector>   // For conceptual sensor data history
-#include <numeric>  // For std::accumulate
 #include <cstdlib>  // For rand()
 
 // --- Global variables ---
-Quaternion orientation_q; // Stores the current orientation
+Quaternion orientation_q; // Stores the current orientation (body frame to world frame)
 
 // Sensor data (conceptual - replace with actual sensor reads)
-float gx_rad_s, gy_rad_s, gz_rad_s; // Gyro readings in rad/s
-float ax_m_s2, ay_m_s2, az_m_s2;    // Accelerometer readings
+float gx_rad_s, gy_rad_s, gz_rad_s; // Gyro readings in rad/s from body frame
+float ax_m_s2, ay_m_s2, az_m_s2;    // Accelerometer readings in m/s^2 from body frame
 
 // Timing
 float dt = 0.01f; // Sample period (e.g., 100Hz / 0.01s) - adjust to your loop rate
 
 // Filter parameters
-// gyro_confidence determines how much of the correction is applied.
-// A smaller value (e.g., 0.02) means accelerometer corrects slowly (long time constant).
-// A larger value (e.g., 0.1) means accelerometer corrects faster (shorter time constant).
-// This is effectively the 'alpha' in a simple complementary filter where:
-// angle = (1-alpha)* (angle + gyro * dt) + alpha * accel_angle
-// Here, we apply a fraction of the quaternion error.
-float accel_correction_factor = 0.02f;
+float accel_correction_factor = 0.02f; // How strongly accelerometer corrects gyro drift
 
+// Constants for accelerometer correction window
+const float GRAVITY_MSS = 9.80665f;         // Standard gravity
+const float ACCEL_WINDOW_MSS = 1.0f;      // Allowable deviation from 1g (e.g., +/- 1.0 m/s^2)
 
 // --- Function declarations (conceptual for Arduino style) ---
 void setup();
@@ -51,9 +48,8 @@ void read_sensors_and_update_state(); // Placeholder for actual sensor reading l
 int main() {
     setup();
     for (int i = 0; i < 1000; ++i) { // Simulate 1000 loops
-        read_sensors_and_update_state(); // Simulate reading sensors
-        loop(); // Process sensor data
-        // In a real scenario, delay or manage loop timing for 'dt'
+        read_sensors_and_update_state();
+        loop();
         if (i % 100 == 0) {
              std::cout << "Loop " << i << ". Orientation: w=" << orientation_q.a
                        << " x=" << orientation_q.b << " y=" << orientation_q.c
@@ -65,13 +61,9 @@ int main() {
 
 // --- Arduino-style setup ---
 void setup() {
-    // Initialize orientation quaternion to identity (no rotation, aligned with world frame)
-    orientation_q = Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
+    orientation_q = Quaternion(1.0f, 0.0f, 0.0f, 0.0f); // Initialized to identity
 
-    // Conceptual: Initialize sensors here
-    // conceptual_sensor_init();
-
-    std::cout << "Setup complete. Initial orientation: w=" << orientation_q.a
+    std::cout << "Setup complete. Initial orientation (body to world): w=" << orientation_q.a
               << " x=" << orientation_q.b << " y=" << orientation_q.c
               << " z=" << orientation_q.d << std::endl;
 }
@@ -79,101 +71,96 @@ void setup() {
 // --- Arduino-style loop ---
 void loop() {
     // 1. Gyro Integration
-    // Calculate rotation vector components from gyro rates and time delta
     float rx = gx_rad_s * dt;
     float ry = gy_rad_s * dt;
     float rz = gz_rad_s * dt;
 
     Quaternion delta_q = Quaternion::from_axis_angle(rx, ry, rz);
+    // Since orientation_q is body-to-world, and delta_q is a rotation in the current body frame:
     orientation_q = orientation_q * delta_q;
     orientation_q.normalize();
 
     // 2. Accelerometer-based Drift Correction
-    float accel_mag = std::sqrt(ax_m_s2*ax_m_s2 + ay_m_s2*ay_m_s2 + az_m_s2*az_m_s2);
+    float accel_norm = std::sqrt(ax_m_s2*ax_m_s2 + ay_m_s2*ay_m_s2 + az_m_s2*az_m_s2);
 
-    if (accel_mag > 0.1f) { // Only correct if acceleration is significant (e.g., not in freefall)
-        Quaternion accel_body_q(0.0f, ax_m_s2 / accel_mag, ay_m_s2 / accel_mag, az_m_s2 / accel_mag);
+    // Only apply correction if accelerometer reading is close to 1g (i.e., mostly sensing gravity)
+    if (accel_norm > (GRAVITY_MSS - ACCEL_WINDOW_MSS) &&
+        accel_norm < (GRAVITY_MSS + ACCEL_WINDOW_MSS)) {
 
-        // Gravity vector in world frame (assuming Z is up, so gravity acts along -Z)
-        // The accelerometer measures the reaction force, so it points "up" from the device.
-        // So, the world reference for "up" is (0,0,1)
+        // Normalized accelerometer vector (measured "up" in body frame)
+        Quaternion measured_up_body_q(0.0f, ax_m_s2 / accel_norm, ay_m_s2 / accel_norm, az_m_s2 / accel_norm);
+
+        // World's "up" vector (e.g., positive Z axis).
+        // If your sensor is mounted upside down (e.g., its +Z points to world -Z),
+        // this reference should be (0,0,0,-1).
         Quaternion world_up_reference_q(0.0f, 0.0f, 0.0f, 1.0f);
 
-        // Predicted "up" vector in the body frame, based on current orientation_q
-        // This is where the body's Z-axis (if it were aligned with world Z) would point
-        // if rotated by orientation_q.conj() (world to body transformation).
-        // Or, how the world's Z vector appears in the body's frame.
-        Quaternion predicted_up_body_q = orientation_q.conj().rotate(world_up_reference_q);
-        predicted_up_body_q.normalize(); // ensure it's pure vector and normalized after rotation
+        // What the accelerometer *should* be reading if orientation_q were perfect.
+        // This transforms the world "up" vector into the body's coordinate frame using current orientation.
+        // (orientation_q.conj() is world-to-body)
+        Quaternion expected_up_body_q = orientation_q.conj().rotate(world_up_reference_q);
+        // The .rotate() method applies q*v*q.conj. So orientation_q.conj().rotate(world_up_reference_q)
+        // is (q_conj * world_up * q_conj.conj()) = (q_conj * world_up * q). This is correct.
 
-        // Calculate the corrective rotation from predicted "up" to measured "up" (accel vector)
-        Quaternion error_correction_q = predicted_up_body_q.rotation_between_vectors(accel_body_q);
+        // Calculate the corrective rotation to align what the gyro thinks "up" is in the body frame
+        // (expected_up_body_q) with what the accelerometer measures "up" as in the body frame (measured_up_body_q).
+        Quaternion error_correction_q = expected_up_body_q.rotation_between_vectors(measured_up_body_q);
 
         // Fractional application of correction
-        // The `fractional` method computes: q_new = normalize((1-f)*Identity + f*error_correction_q)
-        // This is equivalent to slerping from Identity towards error_correction_q by factor 'f'.
         error_correction_q.fractional(accel_correction_factor);
 
+        // Apply the small correction to the body-to-world orientation
         orientation_q = orientation_q * error_correction_q;
         orientation_q.normalize();
     }
+    // else: Accelerometer reading is not reliable for gravity correction (e.g., during high linear acceleration).
+    //       Orientation will continue to be updated by gyro only.
 }
 
-// --- Placeholder for sensor reading logic ---
+// --- Placeholder for sensor reading logic & state update ---
 void read_sensors_and_update_state() {
     static float true_angle_y_rad = 0.0f;
-    // Simulate a true rotation rate (e.g., around Y axis)
     float true_rotation_rate_y_rad_s = 0.5f; // rad/s
+
+    // Simulate time passing by updating the true angle for the simulation
     true_angle_y_rad += true_rotation_rate_y_rad_s * dt;
 
     // Simulate Gyro: true rate + bias + noise
-    float gyro_bias = 0.01f; // rad/s
-    float gyro_noise_scale = 0.05f; // rad/s
+    float gyro_bias = 0.01f;
+    float gyro_noise_scale = 0.05f;
     gx_rad_s = 0.0f + gyro_bias + gyro_noise_scale * (rand() / (float)RAND_MAX - 0.5f);
     gy_rad_s = true_rotation_rate_y_rad_s + gyro_bias + gyro_noise_scale * (rand() / (float)RAND_MAX - 0.5f);
     gz_rad_s = 0.0f + gyro_bias + gyro_noise_scale * (rand() / (float)RAND_MAX - 0.5f);
 
     // Simulate Accelerometer:
-    // It measures the direction opposite to gravity (+ any linear acceleration).
-    // If world Z is up, gravity is (0,0,-G). Accelerometer measures (0,0,G) if level.
-    // We need to rotate this world gravity vector into the body frame.
-    // True orientation (for simulation):
-    Quaternion true_orientation = Quaternion::from_axis_angle(0, true_angle_y_rad, 0);
+    // True orientation for simulation (body-to-world)
+    Quaternion current_true_orientation_q = Quaternion::from_axis_angle(0.0f, true_angle_y_rad, 0.0f);
 
-    Quaternion world_gravity_vector(0.0f, 0.0f, 0.0f, -1.0f); // Points along -Z world
-    Quaternion body_accel_ideal = true_orientation.conj().rotate(world_gravity_vector);
-                                                           // This rotates world -Z to body frame.
-                                                           // Accel measures reaction, so invert.
+    // World "up" vector (points along +Z world axis)
+    Quaternion world_up_vector(0.0f, 0.0f, 0.0f, 1.0f);
+
+    // Ideal accelerometer reading: world "up" vector transformed into body frame.
+    // Accel measures the reaction force, which is opposite to gravity.
+    // If Z-world is up, gravity pulls along -Z world. Accel measures force along +Z body when level.
+    Quaternion ideal_accel_in_body_q = current_true_orientation_q.conj().rotate(world_up_vector);
 
     float accel_noise_scale = 0.2f; // m/s^2
-    // Accelerometer measures force that counteracts gravity. So if world Z is up,
-    // a level accelerometer measures (0,0, +G).
-    // Let's define world_up = (0,0,1) and find its representation in body frame.
-    Quaternion world_up_vector(0.0f, 0.0f, 0.0f, 1.0f);
-    Quaternion body_accel_measures = true_orientation.conj().rotate(world_up_vector);
-
-
-    ax_m_s2 = body_accel_measures.b + accel_noise_scale * (rand() / (float)RAND_MAX - 0.5f);
-    ay_m_s2 = body_accel_measures.c + accel_noise_scale * (rand() / (float)RAND_MAX - 0.5f);
-    az_m_s2 = body_accel_measures.d + accel_noise_scale * (rand() / (float)RAND_MAX - 0.5f);
-     // Ensure some magnitude if noise makes it zero, to avoid div by zero later
-    if (std::sqrt(ax_m_s2*ax_m_s2 + ay_m_s2*ay_m_s2 + az_m_s2*az_m_s2) < 0.01f) {
-        az_m_s2 = 1.0f;
-    }
+    ax_m_s2 = ideal_accel_in_body_q.b * GRAVITY_MSS + accel_noise_scale * (rand() / (float)RAND_MAX - 0.5f);
+    ay_m_s2 = ideal_accel_in_body_q.c * GRAVITY_MSS + accel_noise_scale * (rand() / (float)RAND_MAX - 0.5f);
+    az_m_s2 = ideal_accel_in_body_q.d * GRAVITY_MSS + accel_noise_scale * (rand() / (float)RAND_MAX - 0.5f);
 }
-
 ```
 
 ## Notes
 
-*   **Coordinate Systems:** Be very mindful of your sensor, body, and world coordinate systems. This example assumes a common convention (e.g., Z-up world frame, sensor axes aligned with body axes). Adjust vector definitions (like `world_up_reference_q`) and quaternion multiplication order accordingly. The example uses Z-up for the world frame, where an accelerometer resting flat on a table would measure `(0,0,+G)`.
-*   **Gyro Bias:** Real gyroscopes have bias. Implement gyro calibration and subtract bias before integration. The example simulates a small bias.
-*   **Accelerometer Noise & External Accelerations:** Accelerometers measure proper acceleration (gravity + linear acceleration). The correction works best when the device is not undergoing significant linear acceleration (or when such accelerations are filtered out or accounted for).
-*   **`from_axis_angle_approx`:** For performance-critical applications where rotation angles per step are very small, `Quaternion::from_axis_angle_approx(rx, ry, rz)` can be used instead of `from_axis_angle`. Remember that `from_axis_angle_approx` now normalizes its result.
-*   **Normalization Frequency:** Normalizing the `orientation_q` quaternion periodically (e.g., every step or every few steps) is crucial to counteract floating-point error accumulation.
-*   **`accel_correction_factor`:** This tuning parameter (e.g., 0.02) determines how aggressively the accelerometer corrects the gyro. A smaller value makes the correction slower and smoother, relying more on the gyro in the short term. A larger value corrects faster but can make the orientation estimate more susceptible to accelerometer noise and jitter from linear accelerations.
-*   **Sensor Data:** The `read_sensors_and_update_state()` function is a placeholder with simulated data. You'll need to implement actual sensor communication and data processing.
-*   **Timing (`dt`):** Accurate and consistent `dt` is important for gyro integration.
-*   **Initial Orientation:** The example initializes to an identity quaternion. If the device starts in a known orientation, initialize `orientation_q` accordingly. Magnetometers are often used for absolute yaw correction, which is not covered in this example.
+*   **Coordinate Systems & `orientation_q` Convention:** This example defines `orientation_q` as representing the rotation from the **body frame to the world frame**. This means `world_vector = orientation_q.rotate(body_vector)`. If you use a world-to-body convention, quaternion multiplication orders and conjugations for transformations will need to be adjusted. The world frame is assumed to be Z-up (gravity acts along negative Z). The accelerometer is assumed to measure the reaction to gravity, so when level and Z-body is up, it reads `(0,0,+G)`.
+*   **Gyro Bias:** Real gyroscopes have bias. Implement gyro calibration and subtract bias from `gx_rad_s, gy_rad_s, gz_rad_s` before integration.
+*   **Accelerometer Limitations:** The accelerometer-based correction is most effective when the device is quasi-static (not undergoing significant linear acceleration). The example includes a basic check to only apply correction when the accelerometer norm is close to 1g.
+*   **`from_axis_angle_approx`:** For performance-critical applications where rotation angles per step are very small, `Quaternion::from_axis_angle_approx(rx, ry, rz)` can be used. It now normalizes its result.
+*   **Normalization Frequency:** Normalizing `orientation_q` after updates is crucial to counteract floating-point error accumulation.
+*   **`accel_correction_factor`:** This (e.g., 0.02) tunes how quickly the accelerometer corrects gyro drift. Smaller values trust the gyro more in the short term and make corrections smoother.
+*   **Sensor Data:** The `read_sensors_and_update_state()` function uses simulated data. Replace with actual sensor interfacing.
+*   **Timing (`dt`):** An accurate and consistent `dt` is vital.
+*   **Initial Orientation & Yaw:** This example initializes to an identity quaternion. For absolute yaw, a magnetometer is typically integrated.
 
-This example provides a starting point for a complementary filter. Robust sensor fusion often involves more sophisticated algorithms like Kalman filters (e.g., EKF, UKF) for optimal state estimation.
+This example provides a foundational complementary filter. More advanced sensor fusion algorithms (like Kalman filters) can provide better performance in dynamic conditions.
