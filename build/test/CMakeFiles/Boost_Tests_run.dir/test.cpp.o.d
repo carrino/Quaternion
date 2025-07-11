@@ -577,7 +577,10 @@ test/CMakeFiles/Boost_Tests_run.dir/test.cpp.o: /app/test/test.cpp \
  /usr/include/boost/utility/value_init.hpp \
  /usr/include/boost/core/swap.hpp \
  /usr/include/boost/test/tree/global_fixture.hpp \
- /usr/include/boost/config/auto_link.hpp /app/test/../Quaternion.h \
+ /usr/include/boost/config/auto_link.hpp \
+ /usr/include/boost/math/quaternion.hpp /usr/include/boost/math_fwd.hpp \
+ /usr/include/boost/math/tools/config.hpp \
+ /usr/include/boost/math/tools/is_standalone.hpp \
  /usr/include/c++/13/cmath /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
@@ -587,4 +590,23 @@ test/CMakeFiles/Boost_Tests_run.dir/test.cpp.o: /app/test/test.cpp \
  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
  /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
- /usr/include/x86_64-linux-gnu/bits/iscanonical.h
+ /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
+ /usr/include/c++/13/cfloat \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/float.h \
+ /usr/include/boost/math/tools/user.hpp /usr/include/c++/13/locale \
+ /usr/include/c++/13/bits/locale_facets_nonio.h /usr/include/c++/13/ctime \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/time_members.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/messages_members.h \
+ /usr/include/libintl.h /usr/include/c++/13/bits/codecvt.h \
+ /usr/include/c++/13/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/13/bits/locale_conv.h /usr/include/c++/13/complex \
+ /usr/include/boost/math/special_functions/sinc.hpp \
+ /usr/include/boost/math/tools/precision.hpp \
+ /usr/include/boost/math/tools/assert.hpp \
+ /usr/include/boost/math/policies/policy.hpp \
+ /usr/include/boost/math/tools/mp.hpp /usr/include/c++/13/cstdint \
+ /usr/include/boost/math/special_functions/math_fwd.hpp \
+ /usr/include/boost/math/special_functions/detail/round_fwd.hpp \
+ /usr/include/boost/math/tools/promotion.hpp /usr/include/c++/13/stdfloat \
+ /usr/include/boost/math/special_functions/sinhc.hpp \
+ /usr/include/boost/math/tools/cxx03_warn.hpp /app/test/../Quaternion.h

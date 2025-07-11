@@ -30,3 +30,23 @@
 
 .idea/
 cmake-build-debug/
+
+# CMake / build directories
+build/
+build-*/
+**/build/
+**/build-*/
+**/CMakeCache.txt
+**/CMakeFiles/
+**/cmake_install.cmake
+**/CTestTestfile.cmake
+Testing/
+
+# Specific files often found in build directories
+*.cbp # Code::Blocks project file
+*.xcodeproj/ # Xcode project
+*.xcworkspace/ # Xcode workspace
+*.sln # Visual Studio solution
+*.suo # Visual Studio user options
+# Executable files from test builds if not covered by generic *.out
+test/Boost_Tests_run

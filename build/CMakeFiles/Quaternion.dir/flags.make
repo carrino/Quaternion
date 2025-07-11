@@ -6,4 +6,5 @@ CXX_DEFINES = -DQuaternion_EXPORTS
 
 CXX_INCLUDES =
 
-CXX_FLAGS = -g -std=gnu++14 -fPIC
+CXX_FLAGS = -std=gnu++14 -fPIC
+

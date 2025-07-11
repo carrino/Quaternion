@@ -60,20 +60,10 @@ EQUALS = =
 CMAKE_SOURCE_DIR = /app
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /app/build
+CMAKE_BINARY_DIR = /app/build_boost_tests
 
 #=============================================================================
 # Targets provided globally by CMake.
-
-# Special rule for the target test
-test:
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
-	/usr/bin/ctest --force-new-ctest-process $(ARGS)
-.PHONY : test
-
-# Special rule for the target test
-test/fast: test
-.PHONY : test/fast
 
 # Special rule for the target edit_cache
 edit_cache:
@@ -97,14 +87,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /app/build/CMakeFiles /app/build//CMakeFiles/progress.marks
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /app/build/CMakeFiles 0
+	cd /app/build_boost_tests && $(CMAKE_COMMAND) -E cmake_progress_start /app/build_boost_tests/CMakeFiles /app/build_boost_tests/test//CMakeFiles/progress.marks
+	cd /app/build_boost_tests && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /app/build_boost_tests/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 clean
+	cd /app/build_boost_tests && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test/clean
 .PHONY : clean
 
 # The main clean target
@@ -113,68 +103,56 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 preinstall
+	cd /app/build_boost_tests && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 preinstall
+	cd /app/build_boost_tests && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /app/build_boost_tests && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
-#=============================================================================
-# Target rules for targets named Quaternion
+# Convenience name for target.
+test/CMakeFiles/Boost_Tests_run.dir/rule:
+	cd /app/build_boost_tests && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test/CMakeFiles/Boost_Tests_run.dir/rule
+.PHONY : test/CMakeFiles/Boost_Tests_run.dir/rule
 
-# Build rule for target.
-Quaternion: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Quaternion
-.PHONY : Quaternion
-
-# fast build rule for target.
-Quaternion/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Quaternion.dir/build.make CMakeFiles/Quaternion.dir/build
-.PHONY : Quaternion/fast
-
-#=============================================================================
-# Target rules for targets named Boost_Tests_run
-
-# Build rule for target.
-Boost_Tests_run: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Boost_Tests_run
+# Convenience name for target.
+Boost_Tests_run: test/CMakeFiles/Boost_Tests_run.dir/rule
 .PHONY : Boost_Tests_run
 
 # fast build rule for target.
 Boost_Tests_run/fast:
-	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/Boost_Tests_run.dir/build.make test/CMakeFiles/Boost_Tests_run.dir/build
+	cd /app/build_boost_tests && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/Boost_Tests_run.dir/build.make test/CMakeFiles/Boost_Tests_run.dir/build
 .PHONY : Boost_Tests_run/fast
 
-Quaternion.o: Quaternion.cpp.o
-.PHONY : Quaternion.o
+test.o: test.cpp.o
+.PHONY : test.o
 
 # target to build an object file
-Quaternion.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Quaternion.dir/build.make CMakeFiles/Quaternion.dir/Quaternion.cpp.o
-.PHONY : Quaternion.cpp.o
+test.cpp.o:
+	cd /app/build_boost_tests && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/Boost_Tests_run.dir/build.make test/CMakeFiles/Boost_Tests_run.dir/test.cpp.o
+.PHONY : test.cpp.o
 
-Quaternion.i: Quaternion.cpp.i
-.PHONY : Quaternion.i
+test.i: test.cpp.i
+.PHONY : test.i
 
 # target to preprocess a source file
-Quaternion.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Quaternion.dir/build.make CMakeFiles/Quaternion.dir/Quaternion.cpp.i
-.PHONY : Quaternion.cpp.i
+test.cpp.i:
+	cd /app/build_boost_tests && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/Boost_Tests_run.dir/build.make test/CMakeFiles/Boost_Tests_run.dir/test.cpp.i
+.PHONY : test.cpp.i
 
-Quaternion.s: Quaternion.cpp.s
-.PHONY : Quaternion.s
+test.s: test.cpp.s
+.PHONY : test.s
 
 # target to generate assembly for a file
-Quaternion.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Quaternion.dir/build.make CMakeFiles/Quaternion.dir/Quaternion.cpp.s
-.PHONY : Quaternion.cpp.s
+test.cpp.s:
+	cd /app/build_boost_tests && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/Boost_Tests_run.dir/build.make test/CMakeFiles/Boost_Tests_run.dir/test.cpp.s
+.PHONY : test.cpp.s
 
 # Help Target
 help:
@@ -184,12 +162,10 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... test"
 	@echo "... Boost_Tests_run"
-	@echo "... Quaternion"
-	@echo "... Quaternion.o"
-	@echo "... Quaternion.i"
-	@echo "... Quaternion.s"
+	@echo "... test.o"
+	@echo "... test.i"
+	@echo "... test.s"
 .PHONY : help
 
 
@@ -201,5 +177,5 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /app/build_boost_tests && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
