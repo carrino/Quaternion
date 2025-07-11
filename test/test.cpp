@@ -693,6 +693,196 @@ BOOST_AUTO_TEST_CASE(Distributivity) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
+// Helper to compare our float Quaternion with boost::math::quaternion<double>
+const double PPM_PERCENT_TOLERANCE = 0.0001; // 1 PPM = 1e-6 = 0.0001%
+
+void checkBoostDoubleEquals(const Quaternion& our_q_float, const boost::math::quaternion<double>& boost_q_double, double tolerance_percentage = PPM_PERCENT_TOLERANCE) {
+    BOOST_CHECK_CLOSE(static_cast<double>(our_q_float.a), boost_q_double.R_component_1(), tolerance_percentage);
+    BOOST_CHECK_CLOSE(static_cast<double>(our_q_float.b), boost_q_double.R_component_2(), tolerance_percentage);
+    BOOST_CHECK_CLOSE(static_cast<double>(our_q_float.c), boost_q_double.R_component_3(), tolerance_percentage);
+    BOOST_CHECK_CLOSE(static_cast<double>(our_q_float.d), boost_q_double.R_component_4(), tolerance_percentage);
+}
+
+// Convert our float Quaternion to boost::math::quaternion<double>
+boost::math::quaternion<double> toBoostQuaternionDouble(const Quaternion& q_float) {
+    return boost::math::quaternion<double>(
+        static_cast<double>(q_float.a),
+        static_cast<double>(q_float.b),
+        static_cast<double>(q_float.c),
+        static_cast<double>(q_float.d)
+    );
+}
+
+BOOST_AUTO_TEST_SUITE(BoostDoubleComparisonTests)
+
+// Test data (using double for Boost side)
+const double M_PI_D = M_PI; // Use double PI
+const double M_PI_2_D = M_PI_D / 2.0;
+const double M_PI_4_D = M_PI_D / 4.0;
+const double SQRT_0_5_D = std::sqrt(0.5);
+
+
+BOOST_AUTO_TEST_CASE(FloatToDoubleMultiplication) {
+    // Our float quaternions
+    Quaternion q1_our_f(std::sqrt(0.5f), std::sqrt(0.5f), 0.0f, 0.0f); // 90 deg X
+    Quaternion q2_our_f(std::sqrt(0.5f), 0.0f, std::sqrt(0.5f), 0.0f); // 90 deg Y
+
+    // Boost double quaternions (constructed from double literals or high-precision calculations)
+    boost::math::quaternion<double> q1_boost_d(SQRT_0_5_D, SQRT_0_5_D, 0.0, 0.0);
+    boost::math::quaternion<double> q2_boost_d(SQRT_0_5_D, 0.0, SQRT_0_5_D, 0.0);
+
+    Quaternion result_our_f = q1_our_f * q2_our_f;
+    boost::math::quaternion<double> result_boost_d = q1_boost_d * q2_boost_d;
+    checkBoostDoubleEquals(result_our_f, result_boost_d);
+
+    // More complex numbers
+    Quaternion q3_our_f(0.1f, 0.2f, 0.3f, 0.4f);
+    q3_our_f.normalize(); // Normalize our float version
+    Quaternion q4_our_f(0.5f, -0.1f, -0.2f, 0.3f);
+    q4_our_f.normalize(); // Normalize our float version
+
+    // Construct Boost double from higher precision, then normalize
+    boost::math::quaternion<double> q3_boost_d_orig(0.1, 0.2, 0.3, 0.4);
+    double q3_norm_d = boost::math::abs(q3_boost_d_orig);
+    boost::math::quaternion<double> q3_boost_d = (q3_norm_d == 0.0) ? q3_boost_d_orig : q3_boost_d_orig / q3_norm_d;
+
+    boost::math::quaternion<double> q4_boost_d_orig(0.5, -0.1, -0.2, 0.3);
+    double q4_norm_d = boost::math::abs(q4_boost_d_orig);
+    boost::math::quaternion<double> q4_boost_d = (q4_norm_d == 0.0) ? q4_boost_d_orig : q4_boost_d_orig / q4_norm_d;
+
+    checkBoostDoubleEquals(q3_our_f * q4_our_f, q3_boost_d * q4_boost_d);
+}
+
+BOOST_AUTO_TEST_CASE(FloatToDoubleFromAxisAngle) {
+    // Test 90 deg rotation around X axis
+    float angle_x_f = M_PI_2; // float
+    double angle_x_d = M_PI_2_D; // double
+    float axis_x_x_f = 1.0f, axis_x_y_f = 0.0f, axis_x_z_f = 0.0f;
+    double axis_x_x_d = 1.0, axis_x_y_d = 0.0, axis_x_z_d = 0.0;
+
+    Quaternion qx_our_f = Quaternion::from_axis_angle(axis_x_x_f * angle_x_f, axis_x_y_f * angle_x_f, axis_x_z_f * angle_x_f);
+
+    double c_half_x_d = std::cos(angle_x_d / 2.0);
+    double s_half_x_d = std::sin(angle_x_d / 2.0);
+    boost::math::quaternion<double> qx_boost_d(c_half_x_d, s_half_x_d * axis_x_x_d, s_half_x_d * axis_x_y_d, s_half_x_d * axis_x_z_d);
+    checkBoostDoubleEquals(qx_our_f, qx_boost_d);
+
+    // Test 30 deg rotation around axis (1,1,1) normalized
+    float angle_xyz_f = M_PI / 6.0f;
+    double angle_xyz_d = M_PI_D / 6.0;
+    float axis_norm_f = std::sqrt(3.0f);
+    double axis_norm_d = std::sqrt(3.0);
+
+    float comp_x_f = angle_xyz_f / axis_norm_f;
+    float comp_y_f = angle_xyz_f / axis_norm_f;
+    float comp_z_f = angle_xyz_f / axis_norm_f;
+    // Our from_axis_angle takes angle components (rx,ry,rz), where total angle = sqrt(rx^2+...), axis = (rx,ry,rz)/total_angle
+    // To rotate by angle_xyz_f around (1/sqrt(3), 1/sqrt(3), 1/sqrt(3)):
+    // rx = angle_xyz_f * (1/sqrt(3)), etc.
+    Quaternion qxyz_our_f = Quaternion::from_axis_angle(comp_x_f, comp_y_f, comp_z_f);
+
+
+    double c_half_xyz_d = std::cos(angle_xyz_d / 2.0);
+    double s_half_xyz_d = std::sin(angle_xyz_d / 2.0);
+    boost::math::quaternion<double> qxyz_boost_d(c_half_xyz_d, (1.0/axis_norm_d) * s_half_xyz_d, (1.0/axis_norm_d) * s_half_xyz_d, (1.0/axis_norm_d) * s_half_xyz_d);
+    checkBoostDoubleEquals(qxyz_our_f, qxyz_boost_d);
+
+    // Test with zero angle (should be identity) - this was fixed to return (1,0,0,0) for float
+    Quaternion q_zero_our_f = Quaternion::from_axis_angle(0.0f, 0.0f, 0.0f);
+    boost::math::quaternion<double> q_zero_boost_d(1.0, 0.0, 0.0, 0.0);
+    checkBoostDoubleEquals(q_zero_our_f, q_zero_boost_d);
+}
+
+
+BOOST_AUTO_TEST_CASE(FloatToDoubleRotate) {
+    // Rotation quaternion: 90 deg around X axis
+    Quaternion rot_q_our_f = Quaternion::from_euler_rotation(M_PI_2, 0.0f, 0.0f); // float based
+
+    boost::math::quaternion<double> rot_q_boost_d(std::cos(M_PI_4_D), std::sin(M_PI_4_D), 0.0, 0.0); // From angle M_PI_2_D around X
+    boost::math::quaternion<double> rot_q_boost_d_conj = conj(rot_q_boost_d);
+
+    // Vector to rotate: (0,1,0) (Y-axis)
+    Quaternion vec_our_f(0.0f, 0.0f, 1.0f, 0.0f); // Our vector constructor is (0, x, y, z)
+    boost::math::quaternion<double> vec_boost_d(0.0, 0.0, 1.0, 0.0);
+
+    Quaternion rotated_vec_our_f = rot_q_our_f.rotate(vec_our_f);
+    boost::math::quaternion<double> rotated_vec_boost_d = rot_q_boost_d * vec_boost_d * rot_q_boost_d_conj;
+    checkBoostDoubleEquals(rotated_vec_our_f, rotated_vec_boost_d);
+
+    // Test rotation by identity
+    Quaternion id_rot_our_f; // (1,0,0,0) float
+    boost::math::quaternion<double> id_rot_boost_d(1.0,0.0,0.0,0.0); // double
+    Quaternion vec3_our_f(0.0f, 0.5f, -0.3f, 1.2f);
+    boost::math::quaternion<double> vec3_boost_d(0.0, 0.5, -0.3, 1.2);
+
+    Quaternion rotated_by_id_our_f = id_rot_our_f.rotate(vec3_our_f);
+    boost::math::quaternion<double> rotated_by_id_boost_d = id_rot_boost_d * vec3_boost_d * conj(id_rot_boost_d);
+    checkBoostDoubleEquals(rotated_by_id_our_f, rotated_by_id_boost_d);
+    // Also check our float result against our original float vector (converted to boost double for comparison structure)
+    checkBoostDoubleEquals(rotated_by_id_our_f, toBoostQuaternionDouble(vec3_our_f));
+}
+
+BOOST_AUTO_TEST_CASE(FloatToDoubleFromAxisAngleApprox) {
+    // Axis for testing (normalized)
+    double axis_d_x = 1.0 / std::sqrt(3.0);
+    double axis_d_y = 1.0 / std::sqrt(3.0);
+    double axis_d_z = 1.0 / std::sqrt(3.0);
+
+    float axis_f_x = static_cast<float>(axis_d_x);
+    float axis_f_y = static_cast<float>(axis_d_y);
+    float axis_f_z = static_cast<float>(axis_d_z);
+
+    // 1. Test with a small angle (e.g., 0.1 radians total)
+    float total_angle_small_f = 0.1f;
+    double total_angle_small_d = 0.1;
+
+    // Our from_axis_angle_approx takes rotation vector components (rx, ry, rz)
+    // rx = total_angle_small_f * axis_f_x, etc.
+    Quaternion q_approx_small_f = Quaternion::from_axis_angle_approx(
+        total_angle_small_f * axis_f_x,
+        total_angle_small_f * axis_f_y,
+        total_angle_small_f * axis_f_z
+    );
+
+    // Boost double quaternion (exact rotation for comparison)
+    double c_half_small_d = std::cos(total_angle_small_d / 2.0);
+    double s_half_small_d = std::sin(total_angle_small_d / 2.0);
+    boost::math::quaternion<double> q_exact_small_d(
+        c_half_small_d,
+        s_half_small_d * axis_d_x,
+        s_half_small_d * axis_d_y,
+        s_half_small_d * axis_d_z
+    );
+    // For small angles (0.1 rad), error is around 0.04% (400 PPM) for vector components.
+    // Tolerance for BOOST_CHECK_CLOSE is a percentage.
+    checkBoostDoubleEquals(q_approx_small_f, q_exact_small_d, 0.05); // 0.05% tolerance
+
+
+    // 2. Test with a larger angle (e.g., 0.5 radians total) - near edge of good approximation
+    float total_angle_large_f = 0.5f;
+    double total_angle_large_d = 0.5;
+
+    Quaternion q_approx_large_f = Quaternion::from_axis_angle_approx(
+        total_angle_large_f * axis_f_x,
+        total_angle_large_f * axis_f_y,
+        total_angle_large_f * axis_f_z
+    );
+
+    double c_half_large_d = std::cos(total_angle_large_d / 2.0);
+    double s_half_large_d = std::sin(total_angle_large_d / 2.0);
+    boost::math::quaternion<double> q_exact_large_d(
+        c_half_large_d,
+        s_half_large_d * axis_d_x,
+        s_half_large_d * axis_d_y,
+        s_half_large_d * axis_d_z
+    );
+    // For larger angles, expect lower accuracy (e.g., 2%)
+    // Tolerance for BOOST_CHECK_CLOSE is a percentage.
+    checkBoostDoubleEquals(q_approx_large_f, q_exact_large_d, 2.0); // 2% tolerance
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 // Helper to compare our Quaternion with boost::math::quaternion<float>
 void checkBoostEquals(const Quaternion& our_q, const boost::math::quaternion<float>& boost_q, float tolerance = BOOST_CMP_TOLERANCE) {
     BOOST_CHECK_CLOSE(our_q.a, boost_q.R_component_1(), tolerance);

@@ -75,15 +75,32 @@ const Quaternion Quaternion::from_axis_angle(float x, float y, float z) {
     return ret;
 }
 
+// Approximates a quaternion from axis-angle components (rx, ry, rz).
+// This is faster than from_axis_angle but less accurate, especially for larger angles.
+// It uses the small angle approximations:
+//   cos(theta/2) ~= 1 - (theta/2)^2 / 2 = 1 - theta^2 / 8
+//   sin(theta/2) ~= theta/2
+// Where theta is the total rotation angle magnitude.
+// The vector components (ret.b, ret.c, ret.d) are approximated as (rx/2, ry/2, rz/2).
+//
+// Valid Domain:
+// This approximation is most suitable for small total rotation angles.
+// - For angles of ~0.1 radians (~5.7 degrees), errors in vector components are around ~0.04%. Scalar component is much more accurate.
+// - For angles up to ~0.5 radians (~28 degrees), errors in vector components are generally within ~1-2%.
+// Beyond this, errors can grow significantly. Always test for your specific accuracy requirements.
+//
+// Trade-off: Speed vs. Accuracy. Use when performance is critical and angles are known to be small.
 const Quaternion Quaternion::from_axis_angle_approx(float x, float y, float z) {
     float angle = sqrtf(x*x + y*y + z*z);
-    float w = 1.0f - (angle * angle / 8.0f);
+    float w = 1.0f - (angle * angle / 8.0f); // Approximates cos(angle/2)
     Quaternion ret;
+    // The vector part x_axis * sin(angle/2) is approximated as (x_comp / angle) * (angle/2) = x_comp / 2
+    // where x_comp is the x component of the rotation vector (input x).
     ret.a = w;
     ret.b = x / 2.0f;
     ret.c = y / 2.0f;
     ret.d = z / 2.0f;
-    return ret;
+    return ret.normalize();
 }
 
 // This method takes an euler rotation in rad and converts it to an equivilent 
