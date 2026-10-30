@@ -1,1 +1,0 @@
-/usr/bin/c++ -g CMakeFiles/Boost_Tests_run.dir/test.cpp.o -o Boost_Tests_run  -Wl,-rpath,/app/build ../libQuaternion.so /usr/lib/x86_64-linux-gnu/libboost_unit_test_framework.so.1.83.0

@@ -30,3 +30,6 @@
 
 .idea/
 cmake-build-debug/
+
+# CMake build output
+build/
