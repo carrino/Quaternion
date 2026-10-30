@@ -43,7 +43,6 @@ BOOST_AUTO_TEST_CASE(AxisAngleApproxErrorIsWithinTheTaylorRemainder) {
 }
 
 BOOST_AUTO_TEST_CASE(AxisAngleApproxIsExactForNoRotation) {
-    // Unlike from_axis_angle(), there is no division by the angle here.
     CHECK_QUAT_CLOSE(Quaternion::from_axis_angle_approx(0, 0, 0), Quaternion(), 0.0);
 }
 

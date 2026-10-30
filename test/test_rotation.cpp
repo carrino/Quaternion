@@ -15,7 +15,6 @@
 //     frame axes (aerospace yaw-pitch-roll, Tait-Bryan ZYX).
 //
 // Known limitations that are deliberately not asserted here (they return NaN):
-//   * from_axis_angle(0, 0, 0) divides by the zero rotation angle.
 //   * rotation_between_vectors() of exactly anti-parallel vectors.
 //   * normalize() of the zero quaternion.
 #include "test_helpers.h"
@@ -46,6 +45,27 @@ BOOST_AUTO_TEST_CASE(FromAxisAngleMatchesBoostExp) {
         Vec3 v = asFloat(angle * normalized(Vec3(1, -2, 2)));
         CHECK_QUAT_CLOSE(axisAngle(v), axisAngleReference(v), kChainTol);
     }
+    // Boost's exp handles the zero vector (its sinc is 1 there), so we must too.
+    CHECK_QUAT_CLOSE(axisAngle(Vec3(0, 0, 0)), axisAngleReference(Vec3(0, 0, 0)), 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(FromAxisAngleOfZeroVectorIsTheIdentity) {
+    // No rotation is exactly the identity, not NaN. This matters in practice:
+    // a single NaN quaternion poisons every product that follows it, so an
+    // orientation estimate fed one zero gyro sample would never recover.
+    CHECK_QUAT_CLOSE(Quaternion::from_axis_angle(0, 0, 0), Quaternion(), 0.0);
+    CHECK_QUAT_CLOSE(Quaternion::from_axis_angle(-0.0f, -0.0f, -0.0f), Quaternion(), 0.0);
+
+    // Components so small that their squares underflow to zero are also no
+    // rotation to within float precision; they used to come out as NaN too.
+    CHECK_QUAT_CLOSE(Quaternion::from_axis_angle(1e-23f, -1e-23f, 1e-23f), Quaternion(), 0.0);
+
+    // The identity composes and rotates like one.
+    Quaternion none = Quaternion::from_axis_angle(0, 0, 0);
+    Quaternion q = Quaternion::from_axis_angle(0.3f, -0.4f, 1.2f);
+    CHECK_QUAT_CLOSE(q * none, q, 0.0);
+    CHECK_QUAT_CLOSE(none * q, q, 0.0);
+    CHECK_QUAT_CLOSE(none.rotate(pure(Vec3(1.5, -2.5, 3.5))), pure(Vec3(1.5, -2.5, 3.5)), 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(FromAxisAngleExplicitCases) {
@@ -199,7 +219,7 @@ BOOST_AUTO_TEST_CASE(FromEulerRotationIsYawPitchRollZYX) {
 }
 
 BOOST_AUTO_TEST_CASE(FromEulerRotationExplicitCases) {
-    // No rotation is exactly the identity (unlike from_axis_angle).
+    // No rotation is exactly the identity.
     CHECK_QUAT_CLOSE(Quaternion::from_euler_rotation(0, 0, 0), Quaternion(), 0.0);
 
     const double h = std::sqrt(0.5);
@@ -217,9 +237,6 @@ BOOST_AUTO_TEST_CASE(FromEulerRotationExplicitCases) {
     Random rnd(19);
     for (int n = 0; n < 500; n++) {
         float t = static_cast<float>(rnd.uniform(-kPi, kPi));
-        if (t == 0.0f) {
-            continue;
-        }
         CHECK_QUAT_CLOSE(Quaternion::from_euler_rotation(t, 0, 0), Quaternion::from_axis_angle(t, 0, 0), kChainTol);
         CHECK_QUAT_CLOSE(Quaternion::from_euler_rotation(0, t, 0), Quaternion::from_axis_angle(0, t, 0), kChainTol);
         CHECK_QUAT_CLOSE(Quaternion::from_euler_rotation(0, 0, t), Quaternion::from_axis_angle(0, 0, t), kChainTol);

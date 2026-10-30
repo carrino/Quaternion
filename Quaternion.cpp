@@ -57,9 +57,14 @@ Quaternion & Quaternion::normalize() {
 
 const Quaternion Quaternion::from_axis_angle(float x, float y, float z) {
     float angle = sqrtf(x*x + y*y + z*z);
+    Quaternion ret;
+    // A zero-length rotation vector is no rotation at all. Without this guard
+    // the divisions below are 0/0 and every later product inherits the NaN.
+    if (angle == 0.0f) {
+        return ret;
+    }
     float s = sinf(angle / 2.0f);
     float w = cosf(angle / 2.0f);
-    Quaternion ret;
     ret.a = w;
     ret.b = x / angle * s;
     ret.c = y / angle * s;

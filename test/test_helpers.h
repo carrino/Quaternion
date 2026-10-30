@@ -20,6 +20,7 @@
 #include <cfloat>
 #include <cmath>
 #include <iomanip>
+#include <limits>
 #include <ostream>
 #include <random>
 
@@ -150,17 +151,29 @@ inline BoostQuat eulerReference(double x, double y, double z) {
 
 // ------------------------------------------------------------------ comparisons
 
+// A NaN anywhere counts as infinitely far apart. std::max() silently drops a
+// NaN operand, which would let a NaN result pass a closeness check.
 inline double maxComponentDiff(const BoostQuat &x, const BoostQuat &y) {
-    return std::max(std::max(std::fabs(x.R_component_1() - y.R_component_1()),
-                             std::fabs(x.R_component_2() - y.R_component_2())),
-                    std::max(std::fabs(x.R_component_3() - y.R_component_3()),
-                             std::fabs(x.R_component_4() - y.R_component_4())));
+    const double diffs[4] = {std::fabs(x.R_component_1() - y.R_component_1()),
+                             std::fabs(x.R_component_2() - y.R_component_2()),
+                             std::fabs(x.R_component_3() - y.R_component_3()),
+                             std::fabs(x.R_component_4() - y.R_component_4())};
+    double worst = 0.0;
+    for (int i = 0; i < 4; i++) {
+        if (std::isnan(diffs[i])) {
+            return std::numeric_limits<double>::infinity();
+        }
+        worst = std::max(worst, diffs[i]);
+    }
+    return worst;
 }
 
 // Rotation angle in [0, pi] represented by a (not necessarily unit) quaternion,
-// treating q and -q as the same rotation.
+// treating q and -q as the same rotation. NaN components give infinity so that
+// a NaN can never look like a small angle.
 inline double rotationAngle(const BoostQuat &q) {
-    return 2.0 * std::atan2(length(vectorPart(q)), std::fabs(q.R_component_1()));
+    double angle = 2.0 * std::atan2(length(vectorPart(q)), std::fabs(q.R_component_1()));
+    return std::isnan(angle) ? std::numeric_limits<double>::infinity() : angle;
 }
 
 // Angle of the rotation taking rotation x to rotation y: zero when they are
