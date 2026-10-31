@@ -1,30 +1,31 @@
-name: CMake Build and Test
+name: Build and Test
 
 on:
   push:
     branches: [ develop ]
   pull_request:
-    branches: [ develop, main, master ] # Also run on PRs to these branches
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install Boost
       run: sudo apt-get update && sudo apt-get install -y libboost-test-dev
 
-    - name: Clean and Create Build Directory
-      run: rm -rf ${{github.workspace}}/build && mkdir ${{github.workspace}}/build
-
-    - name: Configure CMake
-      run: cmake -S ${{github.workspace}} -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug
+    - name: Configure
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config Debug
+      run: cmake --build build --config ${{ matrix.build_type }}
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C Debug --verbose
+      working-directory: build
+      # --no-tests=error makes an empty test list a failure instead of a pass.
+      run: ctest -C ${{ matrix.build_type }} --output-on-failure --no-tests=error
